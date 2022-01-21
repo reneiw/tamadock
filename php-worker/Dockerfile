@@ -38,7 +38,7 @@ RUN apk --update add wget \
 
 
 RUN pecl channel-update pecl.php.net; \
-  docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl
+  docker-php-ext-install mysqli pdo_mysql pcntl
 
 # Add a non-root user:
 ARG PUID=1000
@@ -544,7 +544,7 @@ ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisord.conf"]
 #--------------------------------------------------------------------------
 #
 
-RUN php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
+#RUN php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 
 #
 #--------------------------------------------------------------------------

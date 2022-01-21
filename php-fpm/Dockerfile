@@ -19,17 +19,16 @@ LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 
 ARG LARADOCK_PHP_VERSION
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev oniguruma-dev pcre-dev zlib-dev \
-  wget bash curl sudo supervisor \
-  libzip-dev \
+RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
+  wget bash curl sudo \
+  libzip \
   freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
-  nodejs npm yarn \
   && pecl channel-update pecl.php.net \
   && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
   && rm -rf /tmp/pear
 
-RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli mbstring opcache pcntl pdo pdo_mysql tokenizer xml zip
+RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pdo_mysql opcache pcntl zip
 
 ###########################################################################
 # PHP GRPC:
@@ -65,7 +64,7 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 # Check PHP version:
 ###########################################################################
 
-RUN set -xe; php -v | head -n 1 | grep -q "PHP ${LARADOCK_PHP_VERSION}."
+#RUN set -xe; php -v | head -n 1 | grep -q "PHP ${LARADOCK_PHP_VERSION}."
 
 #
 #--------------------------------------------------------------------------

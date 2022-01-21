@@ -12,9 +12,9 @@ ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev oniguruma-dev pcre-dev zlib-dev \
-  wget bash curl sudo supervisor \
-  libzip-dev \
+RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
+  wget bash curl sudo \
+  libzip \
   freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
   nodejs npm yarn \
   && pecl channel-update pecl.php.net \
@@ -22,7 +22,7 @@ RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
   && rm -rf /tmp/pear
 
-RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli mbstring pcntl pdo pdo_mysql tokenizer xml zip
+RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql zip
 
 RUN curl -s https://getcomposer.org/installer | php \
         && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \

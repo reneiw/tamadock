@@ -67,9 +67,11 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 USER root
 
 ARG INSTALL_SOCKETS=false
+# in 8.1.2 alpine docker must add this env
+ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 RUN if [ ${INSTALL_SOCKETS} = true ]; then \
-    && docker-php-ext-install sockets \
+    docker-php-ext-install sockets \
     && php -m | grep -q 'sockets' \
 ;fi
 

@@ -28,12 +28,11 @@ RUN curl -s https://getcomposer.org/installer | php \
         && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
         && mv composer.phar /usr/local/bin/composer
 
+USER root
+
 ###########################################################################
 # PHP GRPC:
 ###########################################################################
-
-USER root
-
 ARG INSTALL_GRPC=false
 
 RUN if [ ${INSTALL_GRPC} = true ]; then \
@@ -45,9 +44,6 @@ RUN if [ ${INSTALL_GRPC} = true ]; then \
 ###########################################################################
 # PHP GRPC:
 ###########################################################################
-
-USER root
-
 ARG INSTALL_PROTOBUF=false
 
 RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
@@ -57,16 +53,16 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 ;fi
 
 ###########################################################################
-# ssh:
+# PHP SOCKETS:
 ###########################################################################
 
-ARG INSTALL_WORKSPACE_SSH=false
+USER root
 
-COPY insecure_id_rsa /tmp/id_rsa
-COPY insecure_id_rsa.pub /tmp/id_rsa.pub
+ARG INSTALL_SOCKETS=false
 
-RUN if [ ${INSTALL_WORKSPACE_SSH} = true ]; then \
-    apk add --update --no-cache openssh \
+RUN if [ ${INSTALL_SOCKETS} = true ]; then \
+    && docker-php-ext-install sockets \
+    && php -m | grep -q 'sockets' \
 ;fi
 
 

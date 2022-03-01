@@ -75,6 +75,20 @@ RUN if [ ${INSTALL_SOCKETS} = true ]; then \
     && php -m | grep -q 'sockets' \
 ;fi
 
+
+###########################################################################
+# xDebug:
+###########################################################################
+
+ARG INSTALL_XDEBUG=false
+
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+  # Install the xdebug extension
+  # https://xdebug.org/docs/compat
+  pecl install xdebug-3.1.3 \
+  && docker-php-ext-enable xdebug \
+;fi
+
 ###########################################################################
 # Check PHP version:
 ###########################################################################

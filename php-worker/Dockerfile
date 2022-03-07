@@ -516,6 +516,18 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
       && php -m | grep -q 'protobuf' \
 ;fi
 
+
+###########################################################################
+# xlswriter:
+###########################################################################
+
+ARG INSTALL_XLSWRITER=false
+
+RUN if [ ${INSTALL_XLSWRITER} = true ]; then \
+  pecl install xlswriter \
+  && docker-php-ext-enable xlswriter \
+;fi
+
 #
 #--------------------------------------------------------------------------
 # Optional Supervisord Configuration

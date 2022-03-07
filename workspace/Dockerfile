@@ -68,6 +68,17 @@ RUN if [ ${INSTALL_SOCKETS} = true ]; then \
 ;fi
 
 
+###########################################################################
+# xlswriter:
+###########################################################################
+
+ARG INSTALL_XLSWRITER=false
+
+RUN if [ ${INSTALL_XLSWRITER} = true ]; then \
+  pecl install xlswriter \
+  && docker-php-ext-enable xlswriter \
+;fi
+
 ARG TZ=UTC
 ENV TZ ${TZ}
 

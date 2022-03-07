@@ -90,6 +90,17 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 ;fi
 
 ###########################################################################
+# xlswriter:
+###########################################################################
+
+ARG INSTALL_XLSWRITER=false
+
+RUN if [ ${INSTALL_XLSWRITER} = true ]; then \
+  pecl install xlswriter \
+  && docker-php-ext-enable xlswriter \
+;fi
+
+###########################################################################
 # Check PHP version:
 ###########################################################################
 
@@ -104,6 +115,7 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 COPY ./laravel.ini /usr/local/etc/php/conf.d
 COPY ./xlaravel.pool.conf /usr/local/etc/php-fpm.d/
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 USER root
 

@@ -1,23 +1,10 @@
-#
-#--------------------------------------------------------------------------
-# Image Setup
-#--------------------------------------------------------------------------
-#
-# To edit the 'php-fpm' base Image, visit its repository on Github
-#    https://github.com/Laradock/php-fpm
-#
-# To change its version, see the available Tags on the Docker Hub:
-#    https://hub.docker.com/r/laradock/php-fpm/tags/
-#
-# Note: Base Image name format {image-tag}-{php-version}
-#
-
-ARG LARADOCK_PHP_VERSION
-FROM php:${LARADOCK_PHP_VERSION}-fpm-alpine
+FROM php:8.1-fpm-alpine3.16
 
 LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 
 ARG LARADOCK_PHP_VERSION
+
+USER root
 
 RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
   wget bash curl sudo \
@@ -33,9 +20,6 @@ RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pd
 ###########################################################################
 # PHP GRPC:
 ###########################################################################
-
-USER root
-
 ARG INSTALL_GRPC=false
 
 RUN if [ ${INSTALL_GRPC} = true ]; then \
@@ -48,9 +32,6 @@ RUN if [ ${INSTALL_GRPC} = true ]; then \
 ###########################################################################
 # PHP GRPC:
 ###########################################################################
-
-USER root
-
 ARG INSTALL_PROTOBUF=false
 
 RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
@@ -63,9 +44,6 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 ###########################################################################
 # PHP SOCKETS:
 ###########################################################################
-
-USER root
-
 ARG INSTALL_SOCKETS=false
 # in 8.1.2 alpine docker must add this env
 ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
@@ -79,7 +57,6 @@ RUN if [ ${INSTALL_SOCKETS} = true ]; then \
 ###########################################################################
 # xDebug:
 ###########################################################################
-
 ARG INSTALL_XDEBUG=false
 
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
@@ -92,7 +69,6 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 ###########################################################################
 # xlswriter:
 ###########################################################################
-
 ARG INSTALL_XLSWRITER=false
 
 RUN if [ ${INSTALL_XLSWRITER} = true ]; then \

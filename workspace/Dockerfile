@@ -1,6 +1,6 @@
 ARG PHP_VERSION
 
-FROM php:$PHP_VERSION-cli-alpine
+FROM php:8.1-cli-alpine3.16
 
 LABEL org.opencontainers.image.authors="chenzheyu@wufeng-network.com"
 
@@ -11,6 +11,9 @@ ARG PUID=1000
 ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
+
+RUN addgroup -g ${PGID} tamadock && \
+  adduser -D -G tamadock -u ${PUID} tamadock
 
 RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
   wget bash curl sudo \
@@ -27,8 +30,6 @@ RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pc
 RUN curl -s https://getcomposer.org/installer | php \
         && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
         && mv composer.phar /usr/local/bin/composer
-
-USER root
 
 ###########################################################################
 # PHP GRPC:
@@ -83,8 +84,6 @@ ARG TZ=UTC
 ENV TZ ${TZ}
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-USER root
 
 COPY ./laravel.ini /usr/local/etc/php/conf.d
 COPY ./aliases.sh /root/aliases.sh

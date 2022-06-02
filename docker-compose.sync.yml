@@ -1,4 +1,0 @@
-version: '3.5'
-volumes:
-  applications-docker-sync:
-    external: true

@@ -4,15 +4,6 @@ FROM php:8.1-cli-alpine3.16
 
 LABEL org.opencontainers.image.authors="chenzheyu@wufeng-network.com"
 
-# Add a non-root user:
-ARG PUID=1000
-ENV PUID ${PUID}
-ARG PGID=1000
-ENV PGID ${PGID}
-
-RUN addgroup -g ${PGID} tamadock && \
-  adduser -D -G tamadock -u ${PUID} tamadock
-
 # Start as root
 USER root
 
@@ -69,6 +60,14 @@ COPY supervisord.conf /etc/supervisord.conf
 
 ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisord.conf"]
 
+# Add a non-root user:
+ARG PUID=1000
+ENV PUID ${PUID}
+ARG PGID=1000
+ENV PGID ${PGID}
+
+RUN addgroup -g ${PGID} tamadock && \
+  adduser -D -G tamadock -u ${PUID} tamadock
 
 RUN rm /var/cache/apk/* \
   && mkdir -p /var/www

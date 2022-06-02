@@ -7,14 +7,6 @@ LABEL org.opencontainers.image.authors="chenzheyu@wufeng-network.com"
 # Start as root
 USER root
 
-ARG PUID=1000
-ENV PUID ${PUID}
-ARG PGID=1000
-ENV PGID ${PGID}
-
-RUN addgroup -g ${PGID} tamadock && \
-  adduser -D -G tamadock -u ${PUID} tamadock
-
 RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
   wget bash curl sudo \
   libzip \
@@ -101,5 +93,14 @@ RUN rm -rf /tmp/pear \
   && rm /var/cache/apk/* \
   && mkdir -p /var/www
 
+
+
+ARG PUID=1000
+ENV PUID ${PUID}
+ARG PGID=1000
+ENV PGID ${PGID}
+
+RUN addgroup -g ${PGID} tamadock && \
+  adduser -D -G tamadock -u ${PUID} tamadock
 
 WORKDIR /var/www

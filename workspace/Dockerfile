@@ -11,17 +11,13 @@ RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev
   wget bash curl sudo \
   libzip \
   freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
-  nodejs npm yarn \
+  nodejs npm yarn git \
   && pecl channel-update pecl.php.net \
   && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
   && rm -rf /tmp/pear
 
 RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql zip
-
-RUN curl -s https://getcomposer.org/installer | php \
-        && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
-        && mv composer.phar /usr/local/bin/composer
 
 ###########################################################################
 # PHP GRPC:
@@ -65,12 +61,16 @@ RUN if [ ${INSTALL_SOCKETS} = true ]; then \
 # xlswriter:
 ###########################################################################
 
-ARG INSTALL_XLSWRITER=false
+ARG INSTALL_XLS_WRITER=false
 
-RUN if [ ${INSTALL_XLSWRITER} = true ]; then \
+RUN if [ ${INSTALL_XLS_WRITER} = true ]; then \
   pecl install xlswriter \
   && docker-php-ext-enable xlswriter \
 ;fi
+
+RUN curl -s https://getcomposer.org/installer | php \
+        && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
+        && mv composer.phar /usr/local/bin/composer
 
 ARG TZ=UTC
 ENV TZ ${TZ}

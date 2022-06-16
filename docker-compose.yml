@@ -109,20 +109,21 @@ services:
       - backend
   mysql:
     build:
-      context: ./mysql
+      context: ./mariadb
       args:
-        - MYSQL_VERSION=${MYSQL_VERSION}
+        - MARIADB_VERSION=${MYSQL_VERSION}
+        - http_proxy
+        - https_proxy
+        - no_proxy
     environment:
-      - MYSQLD_USER=root
-      - MYSQL_ROOT_HOST=%
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
-      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
-      - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+      - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
+      - ${MYSQL_ENTRYPOINT_INIT_DB}:/docker-entrypoint-init-db.d
     ports:
       - "${MYSQL_PORT}:3306"
     networks:

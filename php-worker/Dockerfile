@@ -11,7 +11,7 @@ RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev
   wget bash curl \
   libzip \
   freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
-  supervisor \
+  nodejs npm supervisor \
   && pecl channel-update pecl.php.net \
   && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \

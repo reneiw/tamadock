@@ -69,9 +69,9 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 ###########################################################################
 # xlswriter:
 ###########################################################################
-ARG INSTALL_XLSWRITER=false
+ARG INSTALL_XLS_WRITER=false
 
-RUN if [ ${INSTALL_XLSWRITER} = true ]; then \
+RUN if [ ${INSTALL_XLS_WRITER} = true ]; then \
   pecl install xlswriter \
   && docker-php-ext-enable xlswriter \
 ;fi

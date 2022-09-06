@@ -8,6 +8,8 @@ networks:
 volumes:
   mysql:
     driver: ${VOLUMES_DRIVER}
+  redis:
+    driver: ${VOLUMES_DRIVER}
 services:
 
   ### Workspace Utilities ##################################
@@ -111,12 +113,13 @@ services:
       - backend
   mysql:
     build:
-      context: ./mariadb
+      context: ./mysql
       args:
         - MARIADB_VERSION=${MYSQL_VERSION}
         - http_proxy
         - https_proxy
         - no_proxy
+        - MYSQL_VERSION=${MYSQL_VERSION}
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
@@ -124,10 +127,20 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - TZ=${WORKSPACE_TIMEZONE}
     volumes:
-      - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
+      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
       - ${MYSQL_ENTRYPOINT_INIT_DB}:/docker-entrypoint-init-db.d
     ports:
       - "${MYSQL_PORT}:3306"
+    networks:
+      - backend
+    platform: ${MYSQL_PLATFORM}
+  redis:
+    build: ./redis
+    volumes:
+      - ${DATA_PATH_HOST}/redis:/data
+    command: --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_PORT}:6379"
     networks:
       - backend
   mailhog:

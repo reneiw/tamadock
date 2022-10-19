@@ -68,7 +68,7 @@ services:
     networks:
       - backend
 
-  ### PHP Worker ############################################
+  ### PHP Worker ###########################################
   php-worker:
     build:
       context: ./php-worker
@@ -113,17 +113,17 @@ services:
     networks:
       - frontend
       - backend
+
+
+  ### MySQL ################################################
   mysql:
     build:
       context: ./mysql
       args:
-        - MARIADB_VERSION=${MYSQL_VERSION}
-        - http_proxy
-        - https_proxy
-        - no_proxy
         - MYSQL_VERSION=${MYSQL_VERSION}
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_HOST="%"
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -136,6 +136,8 @@ services:
     networks:
       - backend
     platform: ${MYSQL_PLATFORM}
+
+  ### Redis ################################################
   redis:
     build: ./redis
     volumes:
@@ -154,6 +156,7 @@ services:
       - frontend
       - backend
 
+  ### ElasticSearch ########################################
   elasticsearch:
     build:
       context: ./elasticsearch

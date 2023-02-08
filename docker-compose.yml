@@ -12,6 +12,8 @@ volumes:
     driver: ${VOLUMES_DRIVER}
   elasticsearch:
     driver: ${VOLUMES_DRIVER}
+  mongo:
+    driver: ${VOLUMES_DRIVER}
 services:
 
   ### Workspace Utilities ##################################
@@ -51,12 +53,15 @@ services:
         - INSTALL_SOCKETS=${PHP_FPM_INSTALL_SOCKETS}
         - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
         - INSTALL_XLS_WRITER=${PHP_FPM_INSTALL_XLS_WRITER}
+        - INSTALL_XHPROF=${PHP_FPM_INSTALL_XHPROF}
+        - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
         - PUID=${PHP_FPM_PUID}
         - PGID=${PHP_FPM_PGID}
         - LOCALE=${PHP_FPM_DEFAULT_LOCALE}
     volumes:
       - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${PHP_FPM_HOST_LOG_PATH}:/var/log/php-fpm
     ports:
       - "${PHP_FPM_XDEBUG_PORT}:9003"
     expose:
@@ -107,6 +112,7 @@ services:
       - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
       - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+      - ${NGINX_LUA_PATH}:/etc/nginx/lua
     ports:
       - "${NGINX_HOST_HTTP_PORT}:80"
       - "${NGINX_HOST_HTTPS_PORT}:443"
@@ -204,5 +210,19 @@ services:
       - ./rabbitmq/management_agent.disable_metrics_collector.conf:/etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
     depends_on:
       - php-fpm
+    networks:
+      - backend
+
+  ### MongoDB ##############################################
+  mongo:
+    build: ./mongo
+    ports:
+      - "${MONGODB_PORT}:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - ${DATA_PATH_HOST}/mongo:/data/db
+      - ${DATA_PATH_HOST}/mongo_config:/data/configdb
     networks:
       - backend

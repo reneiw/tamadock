@@ -1,14 +1,10 @@
-FROM nginx:alpine
-
-LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
-
-COPY nginx.conf /etc/nginx/
+FROM openresty/openresty:alpine
 
 RUN apk update \
     && apk upgrade \
     && apk --update add logrotate \
     && apk add --no-cache openssl \
-    && apk add --no-cache bash
+    && apk add --no-cache bash 
 
 RUN apk add --no-cache curl
 
@@ -25,12 +21,15 @@ RUN touch /var/log/messages
 # Copy 'logrotate' config file
 COPY logrotate/nginx /etc/logrotate.d/
 
+COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY mime.types /etc/nginx/mime.types
+
 # Set upstream conf and remove the default conf
 RUN echo "upstream php-upstream { server ${PHP_UPSTREAM_CONTAINER}:${PHP_UPSTREAM_PORT}; }" > /etc/nginx/conf.d/upstream.conf \
     && rm /etc/nginx/conf.d/default.conf
 
 ADD ./startup.sh /opt/startup.sh
 RUN sed -i 's/\r//g' /opt/startup.sh
-CMD ["/bin/bash", "/opt/startup.sh"]
+#CMD ["/bin/bash", "/opt/startup.sh"]
 
 EXPOSE 80 81 443

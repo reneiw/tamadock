@@ -23,11 +23,11 @@ RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pd
 ARG INSTALL_GRPC=false
 
 RUN if [ ${INSTALL_GRPC} = true ]; then \
-    pecl channel-update pecl.php.net \
-    &&  pecl install grpc \
-    && docker-php-ext-enable grpc \
-    && php -m | grep -q 'grpc' \
-;fi
+  pecl channel-update pecl.php.net \
+  &&  pecl install grpc \
+  && docker-php-ext-enable grpc \
+  && php -m | grep -q 'grpc' \
+  ;fi
 
 ###########################################################################
 # PHP GRPC:
@@ -35,11 +35,11 @@ RUN if [ ${INSTALL_GRPC} = true ]; then \
 ARG INSTALL_PROTOBUF=false
 
 RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
-    pecl channel-update pecl.php.net \
-    &&  pecl install protobuf \
-    && docker-php-ext-enable protobuf \
-    && php -m | grep -q 'protobuf' \
-;fi
+  pecl channel-update pecl.php.net \
+  &&  pecl install protobuf \
+  && docker-php-ext-enable protobuf \
+  && php -m | grep -q 'protobuf' \
+  ;fi
 
 ###########################################################################
 # PHP SOCKETS:
@@ -49,9 +49,9 @@ ARG INSTALL_SOCKETS=false
 ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 RUN if [ ${INSTALL_SOCKETS} = true ]; then \
-    docker-php-ext-install sockets \
-    && php -m | grep -q 'sockets' \
-;fi
+  docker-php-ext-install sockets \
+  && php -m | grep -q 'sockets' \
+  ;fi
 
 
 ###########################################################################
@@ -64,7 +64,7 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
   # https://xdebug.org/docs/compat
   pecl install xdebug-3.1.3 \
   && docker-php-ext-enable xdebug \
-;fi
+  ;fi
 
 ###########################################################################
 # xlswriter:
@@ -74,7 +74,29 @@ ARG INSTALL_XLS_WRITER=false
 RUN if [ ${INSTALL_XLS_WRITER} = true ]; then \
   pecl install xlswriter \
   && docker-php-ext-enable xlswriter \
-;fi
+  ;fi
+
+
+ARG INSTALL_XHPROF=false
+
+RUN set -eux; \
+  if [ ${INSTALL_XHPROF} = true ]; then \
+  # Install the php xhprof extension
+  pecl install xhprof \
+  && docker-php-ext-enable xhprof \
+  ;fi
+
+
+###########################################################################
+# MongoDB:
+###########################################################################
+
+ARG INSTALL_MONGO=false
+
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+  pecl install mongodb \
+  && docker-php-ext-enable mongodb; \
+  fi
 
 ###########################################################################
 # Check PHP version:
@@ -102,7 +124,7 @@ ARG PGID=1000
 ENV PGID ${PGID}
 
 RUN addgroup -g ${PGID} www && \
-    adduser -D -G www -u ${PUID} www
+  adduser -D -G www -u ${PUID} www
 
 # Configure locale.
 ARG LOCALE=POSIX

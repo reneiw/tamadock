@@ -68,6 +68,19 @@ RUN if [ ${INSTALL_XLS_WRITER} = true ]; then \
   && docker-php-ext-enable xlswriter \
 ;fi
 
+
+###########################################################################
+# Swoole EXTENSION
+###########################################################################
+
+ARG INSTALL_SWOOLE=false
+
+RUN if [ ${INSTALL_SWOOLE} = true ]; then \
+  # Install Php Swoole Extension
+  pecl install swoole \
+  && docker-php-ext-enable swoole \
+;fi
+
 RUN curl -s https://getcomposer.org/installer | php \
         && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
         && mv composer.phar /usr/local/bin/composer

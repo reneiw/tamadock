@@ -1,6 +1,6 @@
 ARG PHP_VERSION
 
-FROM php:8.1-cli-alpine3.17
+FROM php:8.1-cli-alpine3.18
 
 LABEL org.opencontainers.image.authors="chenzheyu@wufeng-network.com"
 

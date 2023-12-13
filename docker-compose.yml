@@ -178,7 +178,7 @@ services:
       - cluster.name=laradock-cluster
       - node.name=laradock-node
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
       - cluster.initial_master_nodes=laradock-node
     ulimits:
       memlock:
@@ -228,7 +228,7 @@ services:
     networks:
       - backend
 
-### Minio ################################################
+  ### Minio ################################################
   minio:
     build: ./minio
     volumes:
@@ -240,6 +240,20 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    networks:
+      - frontend
+      - backend
+
+  ### Kibana ##############################################
+  kibana:
+    build:
+      context: ./kibana
+      args:
+        - ELK_VERSION=${ELK_VERSION}
+    ports:
+      - "${KIBANA_HTTP_PORT}:5601"
+    depends_on:
+      - elasticsearch
     networks:
       - frontend
       - backend

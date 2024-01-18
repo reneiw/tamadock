@@ -48,7 +48,7 @@ services:
     build:
       context: ./php-fpm
       args:
-        - LARADOCK_PHP_VERSION=${PHP_VERSION}
+        - PHP_VERSION=${PHP_VERSION}
         - INSTALL_GRPC=${PHP_FPM_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${PHP_FPM_INSTALL_PROTOBUF}
         - INSTALL_SOCKETS=${PHP_FPM_INSTALL_SOCKETS}
@@ -81,7 +81,7 @@ services:
     build:
       context: ./php-worker
       args:
-        - LARADOCK_PHP_VERSION=${PHP_VERSION}
+        - PHP_VERSION=${PHP_VERSION}
         - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
         - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
         - INSTALL_GRPC=${PHP_WORKER_INSTALL_GRPC}

@@ -1,8 +1,6 @@
 ARG PHP_VERSION
 
-FROM php:8.1-cli-alpine3.18
-
-LABEL org.opencontainers.image.authors="chenzheyu@wufeng-network.com"
+FROM php:${PHP_VERSION}-cli-alpine3.18
 
 # Start as root
 USER root

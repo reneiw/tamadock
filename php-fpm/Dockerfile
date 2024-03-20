@@ -1,19 +1,44 @@
 ARG PHP_VERSION
+ARG DEBIAN_VERSION
 
-FROM php:${PHP_VERSION}-fpm-alpine3.18
+FROM php:${PHP_VERSION}-fpm-${DEBIAN_VERSION}
 
+# Set Environment Variables
+ENV DEBIAN_FRONTEND noninteractive
+
+# Start as root
 USER root
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
-  wget bash curl sudo \
-  libzip \
-  freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
-  && pecl channel-update pecl.php.net \
-  && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
-  && rm -rf /tmp/pear
-
-RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pdo_mysql opcache pcntl zip
+RUN set -xe; \
+    apt-get update -yqq && \
+    apt-get upgrade -y; \
+    pecl channel-update pecl.php.net && \
+    apt-get install -yqq \
+    apt-utils \
+    curl \
+    gnupg2 \
+    libmemcached-dev \
+    libz-dev \
+    libpq-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libssl-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libmcrypt-dev \
+    libonig-dev \
+    libzip-dev zip unzip && \
+    docker-php-ext-configure zip && docker-php-ext-install zip && \
+    pecl install -o -f redis && docker-php-ext-enable redis && \
+    docker-php-ext-install bcmath exif mysqli opcache pcntl pdo_mysql pdo_pgsql pgsql;\
+    docker-php-ext-configure gd \
+      --prefix=/usr \
+      --with-jpeg \
+      --with-webp \
+      --with-xpm \
+      --with-freetype; \
+    docker-php-ext-install gd; 
 
 ###########################################################################
 # PHP GRPC:
@@ -96,24 +121,16 @@ RUN if [ ${INSTALL_MONGO} = true ]; then \
   && docker-php-ext-enable mongodb; \
   fi
 
-###########################################################################
-# Check PHP version:
-###########################################################################
-
-#RUN set -xe; php -v | head -n 1 | grep -q "PHP ${LARADOCK_PHP_VERSION}."
-
-#
-#--------------------------------------------------------------------------
-# Final Touch
-#--------------------------------------------------------------------------
-#
-
 COPY ./laravel.ini /usr/local/etc/php/conf.d
 COPY ./xlaravel.pool.conf /usr/local/etc/php-fpm.d/
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 USER root
+
+# Clean up
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    rm -f /var/log/lastlog /var/log/faillog
 
 # Configure non-root user.
 ARG PUID=1000
@@ -121,8 +138,8 @@ ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
 
-RUN addgroup -g ${PGID} www && \
-  adduser -D -G www -u ${PUID} www
+RUN groupmod -o -g ${PGID} www-data && \
+    usermod -o -u ${PUID} -g www-data www-data
 
 # Configure locale.
 ARG LOCALE=POSIX

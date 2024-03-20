@@ -21,6 +21,7 @@ services:
     build:
       context: ./workspace
       args:
+        - DEBIAN_VERSION=${DEBIAN_VERSION}
         - PHP_VERSION=${PHP_VERSION}
         - INSTALL_GRPC=${WORKSPACE_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${WORKSPACE_INSTALL_PROTOBUF}
@@ -48,6 +49,7 @@ services:
     build:
       context: ./php-fpm
       args:
+        - DEBIAN_VERSION=${DEBIAN_VERSION}
         - PHP_VERSION=${PHP_VERSION}
         - INSTALL_GRPC=${PHP_FPM_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${PHP_FPM_INSTALL_PROTOBUF}
@@ -81,6 +83,7 @@ services:
     build:
       context: ./php-worker
       args:
+        - DEBIAN_VERSION=${DEBIAN_VERSION}
         - PHP_VERSION=${PHP_VERSION}
         - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
         - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}

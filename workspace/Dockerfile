@@ -1,21 +1,44 @@
 ARG PHP_VERSION
+ARG DEBIAN_VERSION
 
-FROM php:${PHP_VERSION}-cli-alpine3.18
+FROM php:${PHP_VERSION}-cli-${DEBIAN_VERSION}
+
+# Set Environment Variables
+ENV DEBIAN_FRONTEND noninteractive
 
 # Start as root
 USER root
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
-  wget bash curl sudo \
-  libzip \
-  freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
-  nodejs npm yarn git \
-  && pecl channel-update pecl.php.net \
-  && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
-  && rm -rf /tmp/pear
-
-RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql zip
+RUN set -xe; \
+    apt-get update -yqq && \
+    apt-get upgrade -y; \
+    pecl channel-update pecl.php.net && \
+    apt-get install -yqq \
+    apt-utils \
+    curl \
+    gnupg2 \
+    libmemcached-dev \
+    libz-dev \
+    libpq-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libssl-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libmcrypt-dev \
+    libonig-dev \
+    libzip-dev zip unzip && \
+    docker-php-ext-configure zip && docker-php-ext-install zip && \
+    pecl install -o -f redis && docker-php-ext-enable redis && \
+    docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql pdo_pgsql pgsql;\
+    docker-php-ext-configure gd \
+      --prefix=/usr \
+      --with-jpeg \
+      --with-webp \
+      --with-xpm \
+      --with-freetype; \
+    docker-php-ext-install gd; 
 
 ###########################################################################
 # PHP GRPC:
@@ -51,7 +74,6 @@ ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 RUN if [ ${INSTALL_SOCKETS} = true ]; then \
     docker-php-ext-install sockets \
-    && php -m | grep -q 'sockets' \
 ;fi
 
 
@@ -79,9 +101,9 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
   && docker-php-ext-enable swoole \
 ;fi
 
-RUN curl -s https://getcomposer.org/installer | php \
-        && echo "export PATH=${PATH}:/var/www/backend/vendor/bin" >> ~/.bashrc \
-        && mv composer.phar /usr/local/bin/composer
+RUN curl -s http://getcomposer.org/installer | php \
+    && echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc \
+    && mv composer.phar /usr/local/bin/composer
 
 ARG TZ=UTC
 ENV TZ ${TZ}
@@ -99,19 +121,11 @@ RUN sed -i 's/\r//' /root/aliases.sh && \
   echo "export PS1='[\u@\h \W]$'" >> ~/.bashrc && \
   echo "" >> ~/.bashrc
 
+USER root
 
-RUN rm -rf /tmp/pear \
-  && rm /var/cache/apk/* \
-  && mkdir -p /var/www
+# Clean up
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    rm -f /var/log/lastlog /var/log/faillog
 
-
-
-ARG PUID=1000
-ENV PUID ${PUID}
-ARG PGID=1000
-ENV PGID ${PGID}
-
-RUN addgroup -g ${PGID} tamadock && \
-  adduser -D -G tamadock -u ${PUID} tamadock
-
+# Set default work directory
 WORKDIR /var/www

@@ -101,8 +101,32 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
   && docker-php-ext-enable swoole \
 ;fi
 
+###########################################################################
+# Node / NVM:
+###########################################################################
+
+# Check if NVM needs to be installed
+ARG INSTALL_NODE=false
+ARG NODE_VERSION=node
+ENV NVM_DIR "/root/.nvm"
+
+RUN if [ ${INSTALL_NODE} = true ]; then \
+    # Install nvm (A Node Version Manager)
+    mkdir -p $NVM_DIR && \
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install ${NODE_VERSION} \
+    && nvm use ${NODE_VERSION} \
+    && nvm alias default ${NODE_VERSION} \
+    && npm cache clear --force && \
+    echo "" >> ~/.bashrc && \
+    echo 'export PATH="$NVM_INC:$PATH"' >> ~/.bashrc && \
+    echo 'export NVM_DIR="$NVM_DIR"' >> ~/.bashrc && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
+;fi
+
+
 RUN curl -s http://getcomposer.org/installer | php \
-    && echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc \
     && mv composer.phar /usr/local/bin/composer
 
 ARG TZ=UTC

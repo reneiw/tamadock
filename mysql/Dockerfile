@@ -1,5 +1,5 @@
 ARG MYSQL_VERSION
-FROM mysql:latest
+FROM mysql:${MYSQL_VERSION}
 
 ARG TZ=UTC
 ENV TZ ${TZ}

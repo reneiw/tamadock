@@ -69,8 +69,6 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 USER root
 
 ARG INSTALL_SOCKETS=false
-# in 8.1.2 alpine docker must add this env
-ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 RUN if [ ${INSTALL_SOCKETS} = true ]; then \
     docker-php-ext-install sockets \
@@ -120,7 +118,6 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
     && nvm alias default ${NODE_VERSION} \
     && npm cache clear --force && \
     echo "" >> ~/.bashrc && \
-    echo 'export PATH="$NVM_INC:$PATH"' >> ~/.bashrc && \
     echo 'export NVM_DIR="$NVM_DIR"' >> ~/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
 ;fi

@@ -1,17 +1,19 @@
-ARG PHP_VERSION
+ARG PHP_VERSION=8.3
 
-FROM php:${PHP_VERSION}-cli-alpine3.18
+FROM php:${PHP_VERSION}-cli-alpine
 
 # Start as root
 USER root
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev libzip-dev oniguruma-dev pcre-dev zlib-dev \
+RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev oniguruma-dev pcre-dev zlib-dev \
   wget bash curl \
   libzip \
+  libzip-dev \
+  lz4-dev \
   freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev \
   nodejs npm supervisor \
   && pecl channel-update pecl.php.net \
-  && pecl install -o -f redis   && pecl install -o -f redis && docker-php-ext-enable redis \
+  && pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis \
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
   && rm -rf /tmp/pear
 

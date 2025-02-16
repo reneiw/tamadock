@@ -1,5 +1,5 @@
-ARG PHP_VERSION
-ARG DEBIAN_VERSION
+ARG PHP_VERSION=8.3
+ARG DEBIAN_VERSION=bookworm
 
 FROM php:${PHP_VERSION}-cli-${DEBIAN_VERSION}
 
@@ -17,20 +17,23 @@ RUN set -xe; \
     apt-utils \
     curl \
     gnupg2 \
-    libmemcached-dev \
-    libz-dev \
-    libpq-dev \
-    libjpeg-dev \
-    libpng-dev \
     libfreetype6-dev \
+    libjpeg-dev \
+    liblz4-dev \
+    libmcrypt-dev \
+    libmemcached-dev \
+    libonig-dev \
+    libpng-dev \
+    libpq-dev \
     libssl-dev \
     libwebp-dev \
     libxpm-dev \
-    libmcrypt-dev \
-    libonig-dev \
-    libzip-dev zip unzip && \
+    libz-dev \
+    libzip-dev \
+    zip \
+    unzip && \
     docker-php-ext-configure zip && docker-php-ext-install zip && \
-    pecl install -o -f redis && docker-php-ext-enable redis && \
+    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis && \
     docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql pdo_pgsql pgsql;\
     docker-php-ext-configure gd \
       --prefix=/usr \

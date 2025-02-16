@@ -1,44 +1,51 @@
-ARG PHP_VERSION
-ARG DEBIAN_VERSION
+ARG PHP_VERSION=8.3
+ARG DEBIAN_VERSION=bookworm
 
 FROM php:${PHP_VERSION}-fpm-${DEBIAN_VERSION}
 
 # Set Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
 
+# in 8.1.2 alpine docker must add this env
+ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
+
 # Start as root
 USER root
 
-RUN set -xe; \
-    apt-get update -yqq && \
+RUN set -eux; \
+    apt-get update; \
     apt-get upgrade -y; \
-    pecl channel-update pecl.php.net && \
-    apt-get install -yqq \
-    apt-utils \
-    curl \
-    gnupg2 \
-    libmemcached-dev \
-    libz-dev \
-    libpq-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    libssl-dev \
-    libwebp-dev \
-    libxpm-dev \
-    libmcrypt-dev \
-    libonig-dev \
-    libzip-dev zip unzip && \
-    docker-php-ext-configure zip && docker-php-ext-install zip && \
-    pecl install -o -f redis && docker-php-ext-enable redis && \
-    docker-php-ext-install bcmath exif mysqli opcache pcntl pdo_mysql pdo_pgsql pgsql;\
+    apt-get install -y --no-install-recommends \
+            curl \
+            libmemcached-dev \
+            libz-dev \
+            libpq-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libfreetype6-dev \
+            libssl-dev \
+            libwebp-dev \
+            libxpm-dev \
+            libmcrypt-dev \
+            libonig-dev;
+
+RUN set -eux; \
+    docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql pdo_pgsql pgsql; \
+    # Install the PHP gd library
     docker-php-ext-configure gd \
-      --prefix=/usr \
-      --with-jpeg \
-      --with-webp \
-      --with-xpm \
-      --with-freetype; \
-    docker-php-ext-install gd; 
+            --prefix=/usr \
+            --with-jpeg \
+            --with-webp \
+            --with-xpm \
+            --with-freetype; \
+    docker-php-ext-install gd; \
+    php -r 'var_dump(gd_info());'
+
+RUN apt-get install -yqq  libzip-dev zip unzip && \
+    docker-php-ext-configure zip && docker-php-ext-install zip;
+
+RUN apt-get install -yqq liblz4-dev && \
+    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis;
 
 ###########################################################################
 # PHP GRPC:
@@ -68,8 +75,7 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 # PHP SOCKETS:
 ###########################################################################
 ARG INSTALL_SOCKETS=false
-# in 8.1.2 alpine docker must add this env
-ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
+
 
 RUN if [ ${INSTALL_SOCKETS} = true ]; then \
   docker-php-ext-install sockets \
@@ -85,9 +91,10 @@ ARG INSTALL_XDEBUG=false
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
   # Install the xdebug extension
   # https://xdebug.org/docs/compat
-  pecl install xdebug-3.1.3 \
+  pecl install xdebug-3.4.0 \
   && docker-php-ext-enable xdebug \
   ;fi
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 ###########################################################################
 # xlswriter:

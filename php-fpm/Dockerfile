@@ -4,10 +4,8 @@ ARG DEBIAN_VERSION=bookworm
 FROM php:${PHP_VERSION}-fpm-${DEBIAN_VERSION}
 
 # Set Environment Variables
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
-# in 8.1.2 alpine docker must add this env
-ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Start as root
 USER root

@@ -4,7 +4,7 @@ ARG DEBIAN_VERSION=bookworm
 FROM php:${PHP_VERSION}-cli-${DEBIAN_VERSION}
 
 # Set Environment Variables
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Start as root
 USER root

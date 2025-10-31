@@ -62,9 +62,9 @@ ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisord.conf"]
 
 # Add a non-root user:
 ARG PUID=1000
-ENV PUID ${PUID}
+ENV PUID=${PUID}
 ARG PGID=1000
-ENV PGID ${PGID}
+ENV PGID=${PGID}
 
 RUN addgroup -g ${PGID} tamadock && \
   adduser -D -G tamadock -u ${PUID} tamadock

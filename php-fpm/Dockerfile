@@ -139,16 +139,16 @@ RUN apt-get clean && \
 
 # Configure non-root user.
 ARG PUID=1000
-ENV PUID ${PUID}
+ENV PUID=${PUID}
 ARG PGID=1000
-ENV PGID ${PGID}
+ENV PGID=${PGID}
 
 RUN groupmod -o -g ${PGID} www-data && \
     usermod -o -u ${PUID} -g www-data www-data
 
 # Configure locale.
 ARG LOCALE=POSIX
-ENV LC_ALL ${LOCALE}
+ENV LC_ALL=${LOCALE}
 
 WORKDIR /var/www
 

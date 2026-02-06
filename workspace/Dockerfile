@@ -109,7 +109,7 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
 # Check if NVM needs to be installed
 ARG INSTALL_NODE=false
 ARG NODE_VERSION=node
-ENV NVM_DIR "/root/.nvm"
+ENV NVM_DIR="/root/.nvm"
 
 RUN if [ ${INSTALL_NODE} = true ]; then \
     # Install nvm (A Node Version Manager)
@@ -130,7 +130,7 @@ RUN curl -s http://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer
 
 ARG TZ=UTC
-ENV TZ ${TZ}
+ENV TZ=${TZ}
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

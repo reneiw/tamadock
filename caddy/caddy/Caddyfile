@@ -1,0 +1,33 @@
+{
+    debug
+    storage file_system {
+        root /etc/caddy/certs
+    }
+    email {$EMAIL:admin@email.com}
+}
+
+(common_php) {
+	php_fastcgi php-fpm:9000 {
+		read_timeout 3600s
+	}
+
+	try_files {path} {path}/ /index.php?{query}
+
+	file_server
+
+	request_body {
+		max_size 100MB
+	}
+
+	@htfiles {
+		path /.ht*
+	}
+	respond @htfiles 403
+
+	log {
+		output file /var/log/caddy/access.log
+		format console
+	}
+}
+
+import sites/*

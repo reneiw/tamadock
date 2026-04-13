@@ -1,0 +1,45 @@
+*.big.kaopu.men {
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+		resolvers 1.1.1.1
+	}	
+
+	# 默认 root
+	root * /var/www/default/public
+
+	import common_php
+
+	# ===== 子域名精确匹配 =====
+
+	@analysis host as.big.kaopu.men
+	handle @analysis {
+		root * /var/www/analysis/public
+	}
+
+	@analysis2 host as2.big.kaopu.men
+	handle @analysis2 {
+		root * /var/www/analysis2/public
+	}
+
+	@vip host vip.big.kaopu.men
+	handle @vip {
+		root * /var/www/vip/backend/public
+	}
+
+	@wasp host wa.big.kaopu.men
+	handle @wasp {
+		root * /var/www/wasp/public
+	}
+
+	@debug host debug.big.kaopu.men
+	handle @debug {
+		root * /var/www/debug/public
+	}
+
+	@hermes host hm.big.kaopu.men
+	handle @hermes {
+		root * /var/www/hermes/backend/public
+	}
+
+}

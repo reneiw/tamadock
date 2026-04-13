@@ -16,6 +16,7 @@ RUN set -xe; \
     apt-get install -yqq \
     apt-utils \
     curl \
+    git \
     gnupg2 \
     libfreetype6-dev \
     libjpeg-dev \

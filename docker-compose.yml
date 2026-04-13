@@ -13,6 +13,8 @@ volumes:
     driver: ${VOLUMES_DRIVER}
   mongo:
     driver: ${VOLUMES_DRIVER}
+  caddy:
+    driver: ${VOLUMES_DRIVER}
 services:
 
   ### Workspace Utilities ##################################
@@ -44,6 +46,12 @@ services:
     networks:
       - frontend
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "php -v >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   ### PHP-FPM ##############################################
   php-fpm:
@@ -75,9 +83,16 @@ services:
     environment:
       - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}
     depends_on:
-      - workspace
+      workspace:
+        condition: service_healthy
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   ### PHP Worker ###########################################
   php-worker:
@@ -99,7 +114,8 @@ services:
     ports:
       - "10000:10000"
     depends_on:
-      - workspace
+      workspace:
+        condition: service_healthy
     extra_hosts:
       - "dockerhost:${DOCKER_HOST_IP}"
     networks:
@@ -122,7 +138,8 @@ services:
       - "${NGINX_HOST_HTTP_PORT}:80"
       - "${NGINX_HOST_HTTPS_PORT}:443"
     depends_on:
-      - php-fpm
+      php-fpm:
+        condition: service_healthy
     networks:
       - frontend
       - backend
@@ -149,6 +166,12 @@ services:
     networks:
       - backend
     platform: ${MYSQL_PLATFORM}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   ### Redis ################################################
   redis:
@@ -158,10 +181,18 @@ services:
       - ${DATA_PATH_HOST}/redis:/data
       - ./redis/redis.conf:/etc/redis/redis.conf
     command: --requirepass ${REDIS_PASSWORD}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "${REDIS_PORT}:6379"
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
   mailhog:
     build: ./mailhog
     ports:
@@ -197,10 +228,17 @@ services:
       - "${ELASTICSEARCH_HOST_HTTP_PORT}:9200"
       - "${ELASTICSEARCH_HOST_TRANSPORT_PORT}:9300"
     depends_on:
-      - php-fpm
+      php-fpm:
+        condition: service_healthy
     networks:
       - frontend
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200 >/dev/null || wget -q -O- http://127.0.0.1:9200 >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
   ### RabbitMQ #############################################
   rabbitmq:
     build: ./rabbitmq
@@ -209,16 +247,22 @@ services:
       - "${RABBITMQ_MANAGEMENT_HTTP_HOST_PORT}:15672"
       - "${RABBITMQ_MANAGEMENT_HTTPS_HOST_PORT}:15671"
       - "${RABBITMQ_WEB_STOMP_HOST_PORT}:15674"
-    privileged: true
     hostname: rabbitmq
     volumes:
       - ${DATA_PATH_HOST}/rabbitmq:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./rabbitmq/management_agent.disable_metrics_collector.conf:/etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
     depends_on:
-      - php-fpm
+      php-fpm:
+        condition: service_healthy
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   ### MongoDB ##############################################
   mongo:
@@ -233,6 +277,12 @@ services:
       - ${DATA_PATH_HOST}/mongo_config:/data/configdb
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1 >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   ### Minio ################################################
   minio:
@@ -259,7 +309,34 @@ services:
     ports:
       - "${KIBANA_HTTP_PORT}:5601"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+
+### Caddy Server #########################################
+  caddy:
+    restart: always
+    profiles:
+      - caddy
+    build: ./caddy
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${CADDY_CONFIG_PATH}:/etc/caddy
+      - ${CADDY_HOST_LOG_PATH}:/var/log/caddy
+      - ${DATA_PATH_HOST}:/root/.caddy
+    ports:
+      - "${CADDY_HOST_HTTP_PORT}:80"
+      - "${CADDY_HOST_HTTPS_PORT}:443"
+    environment:
+      - CF_API_TOKEN=${CADDY_CF_API_TOKEN}
+      - EMAIL=${CADDY_CF_DNS_EMAIL}
+    dns:
+      - 1.1.1.1
+    depends_on:
+      php-fpm:
+        condition: service_healthy
     networks:
       - frontend
       - backend

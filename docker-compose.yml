@@ -150,7 +150,7 @@ services:
     build:
       context: ./mysql
       args:
-        - MYSQL_VERSION=${MYSQL_VERSION}
+        - MYSQL_VERSION=9.7
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_ROOT_HOST="%"
@@ -177,6 +177,8 @@ services:
   redis:
     build: 
       context: ./redis
+      args:
+        - REDIS_VERSION=${REDIS_VERSION}
     volumes:
       - ${DATA_PATH_HOST}/redis:/data
       - ./redis/redis.conf:/etc/redis/redis.conf
@@ -188,7 +190,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG >/dev/null"]
+      test: ["CMD-SHELL", "valkey-cli -a $$REDIS_PASSWORD ping | grep PONG >/dev/null"]
       interval: 30s
       timeout: 10s
       retries: 5

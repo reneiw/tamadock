@@ -1,4 +1,5 @@
-FROM redis:latest
+ARG REDIS_VERSION=latest
+FROM valkey/valkey:${REDIS_VERSION}
 
 VOLUME /data
 

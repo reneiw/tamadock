@@ -9,6 +9,8 @@ volumes:
     driver: ${VOLUMES_DRIVER}
   redis:
     driver: ${VOLUMES_DRIVER}
+  postgres:
+    driver: ${VOLUMES_DRIVER}
   elasticsearch:
     driver: ${VOLUMES_DRIVER}
   mongo:
@@ -285,6 +287,31 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  ### PostgreSQL ############################################
+  postgres:
+    build:
+      context: ./postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+      - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql
+      - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=${WORKSPACE_TIMEZONE}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   ### Minio ################################################
   minio:

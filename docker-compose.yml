@@ -11,7 +11,7 @@ volumes:
     driver: ${VOLUMES_DRIVER}
   postgres:
     driver: ${VOLUMES_DRIVER}
-  elasticsearch:
+  opensearch:
     driver: ${VOLUMES_DRIVER}
   mongo:
     driver: ${VOLUMES_DRIVER}
@@ -206,21 +206,20 @@ services:
       - frontend
       - backend
 
-  ### ElasticSearch ########################################
-  elasticsearch:
+  ### OpenSearch ###########################################
+  opensearch:
     build:
       context: ./elasticsearch
       args:
-        - ELK_VERSION=${ELK_VERSION}
+        - OPENSEARCH_VERSION=${OPENSEARCH_VERSION}
     volumes:
-      - elasticsearch:/usr/share/elasticsearch/data
-      - ${ELASTICSEARCH_CONFIG_PATH}/analysis:/usr/share/elasticsearch/config/analysis
+      - opensearch:/usr/share/opensearch/data
+      - ${OPENSEARCH_CONFIG_PATH}/analysis:/usr/share/opensearch/config/analysis
     environment:
-      - cluster.name=laradock-cluster
-      - node.name=laradock-node
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
-      - cluster.initial_master_nodes=laradock-node
+      - "OPENSEARCH_JAVA_OPTS=-Xms2048m -Xmx2048m"
     ulimits:
       memlock:
         soft: -1
@@ -229,8 +228,8 @@ services:
         soft: 65536
         hard: 65536
     ports:
-      - "${ELASTICSEARCH_HOST_HTTP_PORT}:9200"
-      - "${ELASTICSEARCH_HOST_TRANSPORT_PORT}:9300"
+      - "${OPENSEARCH_HOST_HTTP_PORT}:9200"
+      - "${OPENSEARCH_HOST_TRANSPORT_PORT}:9300"
     depends_on:
       php-fpm:
         condition: service_healthy
@@ -329,16 +328,19 @@ services:
       - frontend
       - backend
 
-  ### Kibana ##############################################
-  kibana:
+  ### OpenSearch Dashboards ###############################
+  opensearch-dashboards:
     build:
       context: ./kibana
       args:
-        - ELK_VERSION=${ELK_VERSION}
+        - OPENSEARCH_VERSION=${OPENSEARCH_VERSION}
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
     ports:
-      - "${KIBANA_HTTP_PORT}:5601"
+      - "${OPENSEARCH_DASHBOARDS_HTTP_PORT}:5601"
     depends_on:
-      elasticsearch:
+      opensearch:
         condition: service_healthy
     networks:
       - frontend

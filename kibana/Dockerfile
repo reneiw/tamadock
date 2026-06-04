@@ -1,4 +1,4 @@
-ARG ELK_VERSION
-FROM kibana:${ELK_VERSION}
+ARG OPENSEARCH_VERSION
+FROM opensearchproject/opensearch-dashboards:${OPENSEARCH_VERSION}
 
 EXPOSE 5601

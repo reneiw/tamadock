@@ -1,9 +1,9 @@
 {
-    debug
-    storage file_system {
-        root /etc/caddy/certs
-    }
-    email {$EMAIL:admin@email.com}
+	debug
+	storage file_system {
+		root /etc/caddy/certs
+	}
+	email {$EMAIL:admin@email.com}
 }
 
 (common_php) {

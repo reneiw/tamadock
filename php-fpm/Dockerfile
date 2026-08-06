@@ -40,6 +40,18 @@ RUN set -eux; \
     docker-php-ext-install gd; \
     php -r 'var_dump(gd_info());'
 
+###########################################################################
+# PHP RDKAFKA:
+###########################################################################
+ARG INSTALL_RDKAFKA=false
+
+RUN if [ ${INSTALL_RDKAFKA} = true ]; then \
+  apt-get install -yqq --no-install-recommends librdkafka-dev \
+  && pecl install rdkafka \
+  && docker-php-ext-enable rdkafka \
+  && php -m | grep -q 'rdkafka' \
+;fi
+
 RUN apt-get install -yqq  libzip-dev zip unzip && \
     docker-php-ext-configure zip && docker-php-ext-install zip;
 

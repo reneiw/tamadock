@@ -45,6 +45,18 @@ RUN set -xe; \
     docker-php-ext-install gd; 
 
 ###########################################################################
+# PHP RDKAFKA:
+###########################################################################
+ARG INSTALL_RDKAFKA=false
+
+RUN if [ ${INSTALL_RDKAFKA} = true ]; then \
+  apt-get install -yqq --no-install-recommends librdkafka-dev \
+  && pecl install rdkafka \
+  && docker-php-ext-enable rdkafka \
+  && php -m | grep -q 'rdkafka' \
+;fi
+
+###########################################################################
 # PHP GRPC:
 ###########################################################################
 ARG INSTALL_GRPC=false

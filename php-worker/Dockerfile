@@ -5,7 +5,7 @@ FROM php:${PHP_VERSION}-cli-alpine
 # Start as root
 USER root
 
-RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev libmcrypt-dev libressl libxml2-dev oniguruma-dev pcre-dev zlib-dev \
+RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers openssl-dev libmcrypt-dev openssl libxml2-dev oniguruma-dev pcre-dev zlib-dev \
   wget bash curl \
   libzip \
   libzip-dev \
@@ -16,6 +16,18 @@ RUN apk --update add $PHPIZE_DEPS autoconf build-base linux-headers libressl-dev
   && pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis \
   && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd \
   && rm -rf /tmp/pear
+
+###########################################################################
+# PHP RDKAFKA:
+###########################################################################
+ARG INSTALL_RDKAFKA=false
+
+RUN if [ ${INSTALL_RDKAFKA} = true ]; then \
+      apk add --no-cache librdkafka-dev \
+      && pecl install rdkafka \
+      && docker-php-ext-enable rdkafka \
+      && php -m | grep -q 'rdkafka' \
+;fi
 
 RUN docker-php-ext-configure zip && docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql zip
 

@@ -9,16 +9,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Start as root
 USER root
 
-RUN set -xe; \
+RUN set -eux; \
     apt-get update -yqq && \
-    apt-get upgrade -y; \
-    pecl channel-update pecl.php.net && \
+    apt-get upgrade -y && \
     apt-get install -yqq \
     apt-utils \
     curl \
     git \
     gnupg2 \
+    libcurl4-openssl-dev \
     libfreetype6-dev \
+    libicu-dev \
     libjpeg-dev \
     liblz4-dev \
     libmcrypt-dev \
@@ -26,23 +27,52 @@ RUN set -xe; \
     libonig-dev \
     libpng-dev \
     libpq-dev \
+    libreadline-dev \
+    libsqlite3-dev \
     libssl-dev \
     libwebp-dev \
     libxpm-dev \
+    libxml2-dev \
     libz-dev \
     libzip-dev \
+    unixodbc-dev \
     zip \
     unzip && \
-    docker-php-ext-configure zip && docker-php-ext-install zip && \
-    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis && \
-    docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql pdo_pgsql pgsql;\
+    pecl channel-update pecl.php.net && \
+    install_php_ext() { \
+      extension="$1"; \
+      if ! php -m | grep -qi "^${extension}$"; then \
+        docker-php-ext-install -j"$(nproc)" "${extension}"; \
+      fi; \
+    }; \
+    for extension in \
+      bcmath curl dom exif fileinfo intl mbstring mysqli pcntl \
+      pdo_mysql pdo_pgsql pdo_sqlite pgsql readline simplexml sockets \
+      sysvmsg sysvsem sysvshm xml xmlreader xmlwriter zip; do \
+      install_php_ext "${extension}"; \
+    done; \
+    if ! php -m | grep -qi 'pdo_odbc'; then \
+      docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr && \
+      docker-php-ext-install -j"$(nproc)" pdo_odbc; \
+    fi; \
     docker-php-ext-configure gd \
       --prefix=/usr \
       --with-jpeg \
       --with-webp \
       --with-xpm \
-      --with-freetype; \
-    docker-php-ext-install gd; 
+      --with-freetype && \
+    docker-php-ext-install -j"$(nproc)" gd && \
+    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && \
+    docker-php-ext-enable igbinary redis && \
+    if ! php -m | grep -qi '^msgpack$'; then \
+      pecl install msgpack && docker-php-ext-enable msgpack; \
+    fi; \
+    php -m | grep -qi 'intl' && \
+    php -m | grep -qi 'msgpack' && \
+    php -m | grep -qi 'pdo_odbc' && \
+    php -m | grep -qi 'pdo_pgsql' && \
+    php -m | grep -qi 'sockets' && \
+    php -m | grep -qi 'opcache';
 
 ###########################################################################
 # PHP RDKAFKA:
@@ -79,17 +109,19 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
 ;fi
 
 ###########################################################################
-# PHP SOCKETS:
+# PHP AHOCORASICK:
 ###########################################################################
 
-USER root
+ARG INSTALL_AHOCORASICK=false
 
-ARG INSTALL_SOCKETS=false
-
-RUN if [ ${INSTALL_SOCKETS} = true ]; then \
-    docker-php-ext-install sockets \
-;fi
-
+RUN if [ "${INSTALL_AHOCORASICK}" = true ]; then \
+    git clone --depth 1 https://git.papamk.com/packagist/aho-corasick.git /tmp/aho-corasick && \
+    cd /tmp/aho-corasick && \
+    ./build.sh && \
+    cp .libs/ahocorasick.so "$(php-config --extension-dir)/ahocorasick.so" && \
+    docker-php-ext-enable ahocorasick && \
+    php -m | grep -q '^ahocorasick$'; \
+  fi
 
 ###########################################################################
 # xlswriter:

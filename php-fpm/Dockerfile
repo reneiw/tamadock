@@ -16,29 +16,63 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
             curl \
             git \
-            libmemcached-dev \
-            libz-dev \
-            libpq-dev \
-            libjpeg-dev \
-            libpng-dev \
+            libcurl4-openssl-dev \
             libfreetype6-dev \
+            libicu-dev \
+            libjpeg-dev \
+            liblz4-dev \
+            libmemcached-dev \
+            libonig-dev \
+            libpng-dev \
+            libpq-dev \
+            libreadline-dev \
+            libsqlite3-dev \
             libssl-dev \
             libwebp-dev \
             libxpm-dev \
-            libmcrypt-dev \
-            libonig-dev;
+            libxml2-dev \
+            libz-dev \
+            libzip-dev \
+            unixodbc-dev \
+            zip \
+            unzip;
 
 RUN set -eux; \
-    docker-php-ext-install bcmath exif mysqli pcntl pdo_mysql pdo_pgsql pgsql; \
-    # Install the PHP gd library
+    pecl channel-update pecl.php.net; \
+    install_php_ext() { \
+      extension="$1"; \
+      if ! php -m | grep -qi "^${extension}$"; then \
+        docker-php-ext-install -j"$(nproc)" "${extension}"; \
+      fi; \
+    }; \
+    for extension in \
+      bcmath curl dom exif fileinfo intl mbstring mysqli pcntl \
+      pdo_mysql pdo_pgsql pdo_sqlite pgsql readline simplexml sockets \
+      sysvmsg sysvsem sysvshm xml xmlreader xmlwriter zip; do \
+      install_php_ext "${extension}"; \
+    done; \
+    if ! php -m | grep -qi 'pdo_odbc'; then \
+      docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr && \
+      docker-php-ext-install -j"$(nproc)" pdo_odbc; \
+    fi; \
     docker-php-ext-configure gd \
             --prefix=/usr \
             --with-jpeg \
             --with-webp \
             --with-xpm \
-            --with-freetype; \
-    docker-php-ext-install gd; \
-    php -r 'var_dump(gd_info());'
+            --with-freetype && \
+    docker-php-ext-install -j"$(nproc)" gd && \
+    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && \
+    docker-php-ext-enable igbinary redis && \
+    if ! php -m | grep -qi '^msgpack$'; then \
+      pecl install msgpack && docker-php-ext-enable msgpack; \
+    fi; \
+    php -m | grep -qi 'intl' && \
+    php -m | grep -qi 'msgpack' && \
+    php -m | grep -qi 'pdo_odbc' && \
+    php -m | grep -qi 'pdo_pgsql' && \
+    php -m | grep -qi 'sockets' && \
+    php -m | grep -qi 'opcache';
 
 ###########################################################################
 # PHP RDKAFKA:
@@ -51,12 +85,6 @@ RUN if [ ${INSTALL_RDKAFKA} = true ]; then \
   && docker-php-ext-enable rdkafka \
   && php -m | grep -q 'rdkafka' \
 ;fi
-
-RUN apt-get install -yqq  libzip-dev zip unzip && \
-    docker-php-ext-configure zip && docker-php-ext-install zip;
-
-RUN apt-get install -yqq liblz4-dev && \
-    pecl install -o -f -D 'enable-redis-igbinary="yes" enable-redis-lz4="yes"' igbinary redis && docker-php-ext-enable igbinary redis;
 
 ###########################################################################
 # PHP GRPC:
@@ -83,16 +111,31 @@ RUN if [ ${INSTALL_PROTOBUF} = true ]; then \
   ;fi
 
 ###########################################################################
-# PHP SOCKETS:
+# PHP AHOCORASICK:
 ###########################################################################
-ARG INSTALL_SOCKETS=false
+ARG INSTALL_AHOCORASICK=false
+
+RUN if [ "${INSTALL_AHOCORASICK}" = true ]; then \
+  git clone --depth 1 https://git.papamk.com/packagist/aho-corasick.git /tmp/aho-corasick \
+  && cd /tmp/aho-corasick \
+  && ./build.sh \
+  && cp .libs/ahocorasick.so "$(php-config --extension-dir)/ahocorasick.so" \
+  && docker-php-ext-enable ahocorasick \
+  && php -m | grep -q '^ahocorasick$' \
+;fi
 
 
-RUN if [ ${INSTALL_SOCKETS} = true ]; then \
-  docker-php-ext-install sockets \
-  && php -m | grep -q 'sockets' \
-  ;fi
+###########################################################################
+# PHP SWOOLE:
+###########################################################################
+ARG INSTALL_SWOOLE=false
 
+RUN if [ "${INSTALL_SWOOLE}" = true ]; then \
+  pecl install swoole \
+  && docker-php-ext-enable swoole \
+  && echo "swoole.use_shortname='Off'" > /usr/local/etc/php/conf.d/zz-swoole.ini \
+  && php -m | grep -q '^swoole$' \
+;fi
 
 ###########################################################################
 # xDebug:

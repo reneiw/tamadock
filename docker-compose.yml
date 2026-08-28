@@ -28,9 +28,9 @@ services:
         - PHP_VERSION=${PHP_VERSION}
         - INSTALL_GRPC=${WORKSPACE_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${WORKSPACE_INSTALL_PROTOBUF}
-        - INSTALL_SOCKETS=${WORKSPACE_INSTALL_SOCKETS}
         - INSTALL_RDKAFKA=${WORKSPACE_INSTALL_RDKAFKA}
         - INSTALL_XLS_WRITER=${WORKSPACE_INSTALL_XLS_WRITER}
+        - INSTALL_AHOCORASICK=${WORKSPACE_INSTALL_AHOCORASICK}
         - INSTALL_SWOOLE=${WORKSPACE_INSTALL_SWOOLE}
         - INSTALL_NODE=${WORKSPACE_INSTALL_NODE}
         - NODE_VERSION=${WORKSPACE_NODE_VERSION}
@@ -64,10 +64,11 @@ services:
         - PHP_VERSION=${PHP_VERSION}
         - INSTALL_GRPC=${PHP_FPM_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${PHP_FPM_INSTALL_PROTOBUF}
-        - INSTALL_SOCKETS=${PHP_FPM_INSTALL_SOCKETS}
         - INSTALL_RDKAFKA=${PHP_FPM_INSTALL_RDKAFKA}
+        - INSTALL_SWOOLE=${PHP_FPM_INSTALL_SWOOLE}
         - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
         - INSTALL_XLS_WRITER=${PHP_FPM_INSTALL_XLS_WRITER}
+        - INSTALL_AHOCORASICK=${PHP_FPM_INSTALL_AHOCORASICK}
         - INSTALL_XHPROF=${PHP_FPM_INSTALL_XHPROF}
         - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
         - PUID=${PHP_FPM_PUID}
@@ -107,20 +108,51 @@ services:
         - INSTALL_GRPC=${PHP_WORKER_INSTALL_GRPC}
         - INSTALL_PROTOBUF=${PHP_WORKER_INSTALL_PROTOBUF}
         - INSTALL_RDKAFKA=${PHP_WORKER_INSTALL_RDKAFKA}
+        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
         - INSTALL_XLS_WRITER=${PHP_WORKER_INSTALL_XLS_WRITER}
+        - INSTALL_AHOCORASICK=${PHP_WORKER_INSTALL_AHOCORASICK}
         - PUID=${PHP_WORKER_PUID}
         - PGID=${PHP_WORKER_PGID}
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ./php-worker/supervisord.d:/etc/supervisord.d
+      - ./logs/php-worker:/var/log/supervisor
     ports:
-      - "10000:10000"
+      - "30001-30020:30001-30020"
     depends_on:
       workspace:
         condition: service_healthy
     extra_hosts:
       - "dockerhost:${DOCKER_HOST_IP}"
     networks:
+      - backend
+
+  ### Hyperf Server ########################################
+  hyperf:
+    build:
+      context: ./hyperf
+      args:
+        - HYPERF_VERSION=${HYPERF_VERSION}
+        - INSTALL_RDKAFKA=${HYPERF_INSTALL_RDKAFKA}
+        - INSTALL_GRPC=${HYPERF_INSTALL_GRPC}
+        - INSTALL_PROTOBUF=${HYPERF_INSTALL_PROTOBUF}
+        - INSTALL_XLS_WRITER=${HYPERF_INSTALL_XLS_WRITER}
+        - INSTALL_AHOCORASICK=${HYPERF_INSTALL_AHOCORASICK}
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    working_dir: ${APP_CODE_PATH_CONTAINER}
+    environment:
+      - HYPERF_APP_PATH=${HYPERF_APP_PATH}
+      - HYPERF_START_COMMAND=${HYPERF_START_COMMAND}
+    ports:
+      - "${HYPERF_HOST_HTTP_PORT}:9501"
+    extra_hosts:
+      - "dockerhost:${DOCKER_HOST_IP}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
       - backend
 
   ### NGINX Server #########################################
@@ -177,7 +209,7 @@ services:
 
   ### Redis ################################################
   redis:
-    build: 
+    build:
       context: ./redis
       args:
         - REDIS_VERSION=${REDIS_VERSION}

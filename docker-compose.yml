@@ -80,6 +80,9 @@ services:
       - ${PHP_FPM_HOST_LOG_PATH}:/var/log/php-fpm
     ports:
       - "${PHP_FPM_XDEBUG_PORT}:9003"
+    # Needed for PHP-FPM slowlog to capture child-process stack traces in Docker.
+    cap_add:
+      - SYS_PTRACE
     expose:
       - "9000"
     extra_hosts:

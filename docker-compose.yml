@@ -117,8 +117,6 @@ services:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ./php-worker/supervisord.d:/etc/supervisord.d
       - ./logs/php-worker:/var/log/supervisor
-    ports:
-      - "30001-30020:30001-30020"
     depends_on:
       workspace:
         condition: service_healthy
@@ -249,6 +247,8 @@ services:
       - ${OPENSEARCH_CONFIG_PATH}/analysis:/usr/share/opensearch/config/analysis
     environment:
       - discovery.type=single-node
+      # 单节点开发环境不创建副本，避免新索引因副本无法分配而变黄
+      - cluster.default_number_of_replicas=0
       - DISABLE_SECURITY_PLUGIN=true
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms2048m -Xmx2048m"
